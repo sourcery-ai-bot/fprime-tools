@@ -51,11 +51,10 @@ def validate(parsed, unknown):
             match.group(1): match.group(2)
             for match in [CMAKE_REG.match(arg) for arg in unknown]
         }
-        cmake_args.update(d_args)
-    # Build type only for generate, jobs only for non-generate
+        cmake_args |= d_args
     elif parsed.command in Target.get_all_targets():
         parsed.settings = None  # Force to load from cache if possible
-        make_args.update({"--jobs": (1 if parsed.jobs <= 0 else parsed.jobs)})
+        make_args["--jobs"] = 1 if parsed.jobs <= 0 else parsed.jobs
     parsed.build_cache = (
         None if parsed.build_cache is None else Path(parsed.build_cache)
     )
@@ -118,8 +117,8 @@ def parse_args(args):
 
     # Add all externally defined cli parser command to running functions
     runners = {}
-    runners.update(add_fbuild_parsers(subparsers, common_parser))
-    runners.update(add_fpp_parsers(subparsers, common_parser))
+    runners |= add_fbuild_parsers(subparsers, common_parser)
+    runners |= add_fpp_parsers(subparsers, common_parser)
     runners.update(add_special_parsers(subparsers, common_parser))
 
     # Parse and prepare to run
@@ -129,7 +128,7 @@ def parse_args(args):
         parser.print_help()
         sys.exit(1)
     elif bad:
-        print("[ERROR] Unknown arguments: {}".format(", ".join(bad)))
+        print(f'[ERROR] Unknown arguments: {", ".join(bad)}')
         parser.print_help()
         sys.exit(1)
     cmake_args, make_args = validate(parsed, unknown)

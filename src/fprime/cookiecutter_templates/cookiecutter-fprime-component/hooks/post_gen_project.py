@@ -24,19 +24,21 @@ def remove_line(filename, removal):
 def update_sdd(component_kind, commands, parameters, events, telemetry):
     ports = "## Port Descriptions\n| Name | Description |\n"
     if component_kind == "active":
-        ports = ports + textwrap.dedent(
+        ports += textwrap.dedent(
             """\
         | PingIn | Used for pinging other components |
         | PingOut | Used to receive ping signal |\n"""
         )
+
     elif component_kind == "queued":
-        ports = ports + ""
-        ports = ports + textwrap.dedent(
+        ports += ""
+        ports += textwrap.dedent(
             """\
             | PingIn | Used for pinging other components |
             | PingOut | Used to receive ping signal |
             | SchedIn | Used as a schedular for queued components |\n"""
         )
+
 
     if commands == "yes":
         replace_contents(
@@ -69,11 +71,12 @@ def update_sdd(component_kind, commands, parameters, events, telemetry):
         | ExampleParameter | Example of how a parameter is implemented |\n"""
             ),
         )
-        ports = ports + textwrap.dedent(
+        ports += textwrap.dedent(
             """\
             | prmGetOut | Used to get parameter value |
             | prmSetOut | Used to set parameter value |\n"""
         )
+
     else:
         remove_line("docs/sdd.md", "## Parameters\n")
 
@@ -114,10 +117,11 @@ def update_sdd(component_kind, commands, parameters, events, telemetry):
     else:
         remove_line("docs/sdd.md", "## Telemetry\n")
 
-    ports = ports + textwrap.dedent(
+    ports += textwrap.dedent(
         """\
             | timeGetOut | Used to pass time stamps around the system |\n"""
     )
+
     replace_contents("docs/sdd.md", "## Port Descriptions", ports)
 
 
@@ -125,10 +129,7 @@ def main():
     cwd = Path(os.getcwd())
     deployment = Build.find_nearest_deployment(cwd)
     settings = IniSettings.load(Path(deployment, "settings.ini"))
-    if settings.get("project_root") is None:
-        proj_root_found = False
-    else:
-        proj_root_found = True
+    proj_root_found = settings.get("project_root") is not None
     today = datetime.date.today()
     replace_contents(join("docs", "sdd.md"), "<TODAY>", today.strftime("%m/%d/%Y"))
     update_sdd(

@@ -34,9 +34,7 @@ def get_data_dir():
     if type(get_cmake_builder()) == fprime.fbuild.cmake.CMakeHandler:
         return os.path.join(os.path.dirname(__file__), "cmake-data")
     raise Exception(
-        "Test data directory not setup for {} builder class".format(
-            type(get_cmake_builder())
-        )
+        f"Test data directory not setup for {type(get_cmake_builder())} builder class"
     )
 
 
@@ -88,7 +86,7 @@ def test_get_fprime_configuration():
         ),
         "external": ("/home/user11/Proj", "/opt/lib1;/opt/lib2", "/opt/fprime"),
     }
-    for key in test_data.keys():
+    for key in test_data:
         build_dir = os.path.join(get_data_dir(), key)
         # Test all path, truth pairs
         values = get_cmake_builder().get_fprime_configuration(configs, build_dir)
@@ -110,7 +108,7 @@ def test_get_include_locations():
         ],
         "external": ["/home/user11/Proj", "/opt/lib1", "/opt/lib2", "/opt/fprime"],
     }
-    for key in test_data.keys():
+    for key in test_data:
         build_dir = os.path.join(get_data_dir(), key)
         paths = list(get_cmake_builder().get_include_locations(build_dir))
         assert paths == test_data[key]
@@ -164,7 +162,7 @@ def test_get_include_info():
         ],
     }
     # Run through all the above data look for matching answers
-    for key in test_data.keys():
+    for key in test_data:
         build_dir = os.path.join(get_data_dir(), key)
         # Test all path, truth pairs
         for path, truth in test_data.get(key):

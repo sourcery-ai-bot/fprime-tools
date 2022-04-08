@@ -59,10 +59,9 @@ class IniSettings:
             full_path = os.path.abspath(os.path.normpath(os.path.join(base_dir, path)))
             if exists and not os.path.exists(full_path):
                 raise FprimeSettingsException(
-                    "Nonexistent path '{}' found in section '{}' option '{}' of file '{}'".format(
-                        path, section, key, ini_file
-                    )
+                    f"Nonexistent path '{path}' found in section '{section}' option '{key}' of file '{ini_file}'"
                 )
+
             expanded.append(full_path)
         return expanded
 
@@ -84,7 +83,7 @@ class IniSettings:
 
         # Check file existence if specified
         if not os.path.exists(settings_file):
-            print("[WARNING] Failed to find settings file: {}".format(settings_file))
+            print(f"[WARNING] Failed to find settings file: {settings_file}")
             fprime_location = IniSettings.find_fprime(settings_file.parent)
             return {"framework_path": fprime_location, "install_dest": dfl_install_dest}
         confparse = configparser.ConfigParser()
@@ -93,40 +92,38 @@ class IniSettings:
         fprime_location = IniSettings.read_safe_path(
             confparse, "fprime", "framework_path", settings_file
         )
-        if not fprime_location:
-            fprime_location = IniSettings.find_fprime(settings_file.parent)
-        else:
-            fprime_location = Path(fprime_location[0])
+        fprime_location = (
+            Path(fprime_location[0])
+            if fprime_location
+            else IniSettings.find_fprime(settings_file.parent)
+        )
+
         # Read project root if it is available
         proj_root = IniSettings.read_safe_path(
             confparse, "fprime", "project_root", settings_file
         )
-        proj_root = None if not proj_root else proj_root[0]
+        proj_root = proj_root[0] if proj_root else None
         # Read ac constants if it is available
         ac_consts = IniSettings.read_safe_path(
             confparse, "fprime", "ac_constants", settings_file
         )
-        ac_consts = None if not ac_consts else ac_consts[0]
+        ac_consts = ac_consts[0] if ac_consts else None
         # Read include constants if it is available
         config_dir = IniSettings.read_safe_path(
             confparse, "fprime", "config_directory", settings_file
         )
-        config_dir = None if not config_dir else config_dir[0]
+        config_dir = config_dir[0] if config_dir else None
 
         install_dest = IniSettings.read_safe_path(
             confparse, "fprime", "install_dest", settings_file, False
         )
 
-        if install_dest:
-            install_dest = Path(install_dest[0])
-        else:
-            install_dest = dfl_install_dest
-
+        install_dest = Path(install_dest[0]) if install_dest else dfl_install_dest
         # Read separate environment file if necessary
         env_file = IniSettings.read_safe_path(
             confparse, "fprime", "environment_file", settings_file
         )
-        env_file = settings_file if not env_file else env_file[0]
+        env_file = env_file[0] if env_file else settings_file
         libraries = IniSettings.read_safe_path(
             confparse, "fprime", "library_locations", settings_file
         )
