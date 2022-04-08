@@ -50,7 +50,7 @@ def run_fbuild_cli(
         print(f"[INFO] Generating build directory at: {build.build_dir}")
         print(f"[INFO] Using toolchain file {toolchain} for platform {parsed.platform}")
         if toolchain is not None:
-            cmake_args.update({"CMAKE_TOOLCHAIN_FILE": toolchain})
+            cmake_args["CMAKE_TOOLCHAIN_FILE"] = toolchain
         build.generate(cmake_args)
     elif parsed.command == "purge":
         # Since purge does not load its "base", we need to overload the platform
@@ -107,8 +107,9 @@ def add_target_parser(
             target.mnemonic,
             parents=[common],
             add_help=False,
-            help="{} in the specified directory".format(target.desc),
+            help=f"{target.desc} in the specified directory",
         )
+
         # --ut flag also exists at the global parsers, skip adding it
         existing[target.mnemonic] = (parser, ["ut"])
         # Common target-only items
@@ -123,8 +124,9 @@ def add_target_parser(
     new_flags = [flag for flag in target.flags if flag not in flags]
     for flag in new_flags:
         parser.add_argument(
-            "--{}".format(flag), action="store_true", default=False, help=target.desc
+            f"--{flag}", action="store_true", default=False, help=target.desc
         )
+
     flags.extend(new_flags)
     return target.mnemonic
 
@@ -184,11 +186,10 @@ def add_fbuild_parsers(
         Dictionary mapping command name to the function used to process the commands execution
     """
     parsers = {}
-    run_map = {
+    return {
         add_target_parser(target, subparsers, common, parsers): run_fbuild_cli
         for target in Target.get_all_targets()
+    } | {
+        command: run_fbuild_cli
+        for command in add_special_targets(subparsers, common)
     }
-    run_map.update(
-        {command: run_fbuild_cli for command in add_special_targets(subparsers, common)}
-    )
-    return run_map

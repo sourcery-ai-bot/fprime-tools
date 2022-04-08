@@ -281,10 +281,7 @@ class TimeType(type_base.BaseType):
         Returns:
             A human readable string representing the time type object
         """
-        dt = self.get_datetime(time_zone)
-
-        # If we could convert to a valid datetime, use that, otherwise, format
-        if dt:
+        if dt := self.get_datetime(time_zone):
             return dt.strftime("%Y-%m-%d %H:%M:%S%z")
         else:
             return "%s: %d.%06ds, context=%d" % (
@@ -309,7 +306,7 @@ class TimeType(type_base.BaseType):
         tb = TimeBase(self.__timeBase.val)
         dt = None
 
-        if tb == TimeBase["TB_WORKSTATION_TIME"] or tb == TimeBase["TB_SC_TIME"]:
+        if tb in [TimeBase["TB_WORKSTATION_TIME"], TimeBase["TB_SC_TIME"]]:
 
             # This finds the local time corresponding to the timestamp and
             # timezone object, or local time zone if tz=None

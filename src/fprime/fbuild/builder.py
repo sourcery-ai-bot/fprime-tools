@@ -36,9 +36,7 @@ class BuildType(Enum):
             return ""
         if self == BuildType.BUILD_TESTING:
             return "-ut"
-        raise InvalidBuildTypeException(
-            "{} is not a supported build type".format(self.name)
-        )
+        raise InvalidBuildTypeException(f"{self.name} is not a supported build type")
 
     def get_cmake_build_type(self):
         """Get the suffix of a directory supporting this build"""
@@ -50,9 +48,7 @@ class BuildType(Enum):
             return "Release"
         if self == BuildType.BUILD_CUSTOM:
             return "Custom"
-        raise InvalidBuildTypeException(
-            "{} is not a supported build type".format(self.name)
-        )
+        raise InvalidBuildTypeException(f"{self.name} is not a supported build type")
 
     @staticmethod
     def get_public_types() -> List["BuildType"]:
@@ -114,9 +110,9 @@ class Target(ABC):
         Returns:
             string of format "mnemonic --flag1 --flag2 ..."
         """
-        flag_string = " ".join(["--{}".format(flag) for flag in flags])
-        flag_string = "" if flag_string == "" else " " + flag_string
-        return "{}{}".format(mnemonic, flag_string)
+        flag_string = " ".join([f"--{flag}" for flag in flags])
+        flag_string = f" {flag_string}" if flag_string else ""
+        return f"{mnemonic}{flag_string}"
 
     @classmethod
     def get_all_possible_flags(cls) -> Set[str]:
@@ -152,14 +148,17 @@ class Target(ABC):
         Returns:
             single matching target
         """
-        matching = []
-        for target in cls.get_all_targets():
-            if target.mnemonic == mnemonic and flags == target.flags:
-                matching.append(target)
+        matching = [
+            target
+            for target in cls.get_all_targets()
+            if target.mnemonic == mnemonic and flags == target.flags
+        ]
+
         if not matching:
             raise NoSuchTargetException(
-                "Could not find target '{}'".format(cls.config_string(mnemonic, flags))
+                f"Could not find target '{cls.config_string(mnemonic, flags)}'"
             )
+
         assert len(matching) == 1, "Conflicting targets specified in code"
         return matching[0]
 
@@ -244,9 +243,7 @@ class Build:
         """
         self.__setup_default(platform, build_dir)
         if self.build_dir.exists():
-            raise InvalidBuildCacheException(
-                "{} already exists.".format(self.build_dir)
-            )
+            raise InvalidBuildCacheException(f"{self.build_dir} already exists.")
 
     def load(self, platform: str = None, build_dir: Path = None):
         """Load an existing build cache
@@ -269,9 +266,7 @@ class Build:
         ):
             gen_args = " --ut" if self.build_type == BuildType.BUILD_TESTING else ""
             raise InvalidBuildCacheException(
-                "'{}' is not a valid build cache. Generate this build cache with 'fprime-util generate{}'".format(
-                    self.build_dir, gen_args
-                )
+                f"'{self.build_dir}' is not a valid build cache. Generate this build cache with 'fprime-util generate{gen_args}'"
             )
 
     def get_settings(
@@ -309,8 +304,9 @@ class Build:
         hashes_file = self.build_dir / "hashes.txt"
         if not hashes_file.exists():
             raise InvalidBuildCacheException(
-                "Failed to find {}, was the build generated.".format(hashes_file)
+                f"Failed to find {hashes_file}, was the build generated."
             )
+
         with open(hashes_file) as file_handle:
             lines = filter(
                 lambda line: hash_value == int(line.split(" ")[-1], 0),
@@ -397,10 +393,11 @@ class Build:
             return None
         # Otherwise, find locations of toolchain files using the specified locations from settings.
         toolchains_paths = [
-            os.path.join(loc, "cmake", "toolchain", self.platform + ".cmake")
+            os.path.join(loc, "cmake", "toolchain", f'{self.platform}.cmake')
             for loc in toolchain_locations
             if loc is not None
         ]
+
         # Create a deduplicated set of toolchains
         toolchains = list(
             {
@@ -411,16 +408,14 @@ class Build:
         )
         if not toolchains:
             raise NoSuchToolchainException(
-                "Could not find toolchain file for {} at any of: {}".format(
-                    self.platform, " ".join(toolchains_paths)
-                )
+                f'Could not find toolchain file for {self.platform} at any of: {" ".join(toolchains_paths)}'
             )
+
         if len(toolchains) > 1:
             raise AmbiguousToolchainException(
-                "Found conflicting toolchain files for {} at: {}".format(
-                    self.platform, " ".join(toolchains)
-                )
+                f'Found conflicting toolchain files for {self.platform} at: {" ".join(toolchains)}'
             )
+
         return toolchains[0]
 
     def get_cmake_args(self) -> dict:
@@ -457,12 +452,10 @@ class Build:
             v3_autocoder_directory.exists()
             and self.build_type == BuildType.BUILD_TESTING
         ):
-            cmake_args.update({"BUILD_TESTING": "ON"})
-            cmake_args.update(
-                {"CMAKE_BUILD_TYPE": cmake_args.get("CMAKE_BUILD_TYPE", "Debug")}
-            )
+            cmake_args["BUILD_TESTING"] = "ON"
+            cmake_args["CMAKE_BUILD_TYPE"] = cmake_args.get("CMAKE_BUILD_TYPE", "Debug")
         elif self.build_type == BuildType.BUILD_TESTING:
-            cmake_args.update({"CMAKE_BUILD_TYPE": "Testing"})
+            cmake_args["CMAKE_BUILD_TYPE"] = "Testing"
         return cmake_args
 
     def execute(self, target: Target, context: Path, make_args: dict):

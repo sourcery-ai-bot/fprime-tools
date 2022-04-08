@@ -51,9 +51,7 @@ class StringType(type_base.ValueType):
             self.__max_string_len is not None and len(self.val) > self.__max_string_len
         ):
             raise StringSizeException(len(self.val), self.__max_string_len)
-        # Pack the string size first then return the encoded data
-        buff = struct.pack(">H", len(self.val)) + self.val.encode(DATA_ENCODING)
-        return buff
+        return struct.pack(">H", len(self.val)) + self.val.encode(DATA_ENCODING)
 
     def deserialize(self, data, offset):
         """
@@ -64,11 +62,9 @@ class StringType(type_base.ValueType):
             # Deal with not enough data left in the buffer
             if len(data[offset + 2 :]) < val_size:
                 raise DeserializeException(
-                    "Not enough data to deserialize string data. Needed: {} Left: {}".format(
-                        val_size, len(data[offset + 2 :])
-                    )
+                    f"Not enough data to deserialize string data. Needed: {val_size} Left: {len(data[offset + 2 :])}"
                 )
-            # Deal with a string that is larger than max string
+
             elif self.__max_string_len is not None and val_size > self.__max_string_len:
                 raise StringSizeException(val_size, self.__max_string_len)
             self.val = data[offset + 2 : offset + 2 + val_size].decode(DATA_ENCODING)

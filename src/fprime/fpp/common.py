@@ -90,8 +90,7 @@ def fpp_dependencies(cwd: Path, build: Build, make_args: Dict[str, str]) -> List
     make_paths = lambda line: [
         Path(item) for item in line.strip().split(";") if item.endswith(".fpp")
     ]
-    all_paths = make_paths(lines[2]) + make_paths(lines[3])
-    return all_paths
+    return make_paths(lines[2]) + make_paths(lines[3])
 
 
 def run_fpp_util(
